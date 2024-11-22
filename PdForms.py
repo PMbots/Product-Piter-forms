@@ -13,10 +13,11 @@ from database import (
     deactivate_reminder, delete_user_from_db
 )
 
+TEST_TOKEN = "6511297435:AAF0LWNmaaB3oBpYfWyUKB7n322soW45AmU"
 API_TOKEN = '7645108253:AAHIjxssce32bn3DQKbI4tvuiYHvOWoOnco'
 
 # Инициализация бота и диспетчера
-bot = Bot(token=API_TOKEN)
+bot = Bot(token=TEST_TOKEN)
 storage = MemoryStorage()
 dp = Dispatcher(bot, storage=storage)
 
@@ -120,7 +121,7 @@ async def start_survey(message: types.Message):
         user_id = user[0]
         deactivate_reminder(user_id)
     conn.close()
-    await message.answer("Как тебя зовут? Напиши в формате: Имя и Фамилия.")
+    await message.answer("Как тебя зовут? Напиши в формате: Имя и Фамилия.", reply_markup=ReplyKeyboardRemove())
     await SurveyStates.NAME.set()
 
 @dp.message_handler(state=SurveyStates.NAME)
@@ -136,7 +137,7 @@ async def get_name(message: types.Message, state: FSMContext):
         event="Ответ на вопрос: Как тебя зовут?",
         timestamp=datetime.now().isoformat()
     )
-    await message.answer("Где ты работаешь? Укажи название компании.", reply_markup=ReplyKeyboardRemove())
+    await message.answer("Где ты работаешь? Укажи название компании.")
     await SurveyStates.COMPANY.set()
 
 @dp.message_handler(state=SurveyStates.COMPANY)
