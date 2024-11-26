@@ -22,8 +22,7 @@ def connect_to_google_sheet():
 
 def add_data_to_sheet(sheet_name, data):
     """
-    Добавляет данные в Google таблицу.
-    Если листа не существует, создаёт его с нужными заголовками.
+    Обновляет данные в Google таблице, если строка с tgid существует, иначе добавляет новую строку.
     """
     try:
         # Подключение к Google таблице
@@ -35,21 +34,47 @@ def add_data_to_sheet(sheet_name, data):
         except gspread.exceptions.WorksheetNotFound:
             # Если листа нет, создаём его и добавляем заголовки
             worksheet = spreadsheet.add_worksheet(title=sheet_name, rows="100", cols="8")
-            worksheet.append_row(["TelegramUsername", "Имя", "Работа", "Опыт", "Сфера", "Страна и город", "Позиция"])
+            worksheet.append_row(["tgid", "TelegramUsername", "Имя", "Работа", "Опыт", "Сфера", "Страна и город", "Позиция"])
 
-        # Добавляем данные в лист
-        worksheet.append_row([
-            data.get("username", ""),
-            data.get("name", ""),
-            data.get("company", ""),
-            data.get("experience", ""),
-            data.get("industry", ""),
-            data.get("location", ""),
-            data.get("position", "")
-        ])
-        logging.info("Данные успешно добавлены в таблицу!")
+        # Поиск строки с tgid
+        tgid = str(data.get("tgid", ""))
+        found = False
+        cell = worksheet.find(tgid)  # Ищем tgid в таблице
+
+        if cell:
+            # Если tgid найден, обновляем строку
+            row_index = cell.row
+            worksheet.update(f"A{row_index}:H{row_index}", [[
+                tgid,
+                data.get("username", ""),
+                data.get("name", ""),
+                data.get("company", ""),
+                data.get("experience", ""),
+                data.get("industry", ""),
+                data.get("location", ""),
+                data.get("position", "")
+            ]])
+            found = True
+
+        if not found:
+            # Если tgid не найден, добавляем новую строку
+            worksheet.append_row([
+                tgid,
+                data.get("username", ""),
+                data.get("name", ""),
+                data.get("company", ""),
+                data.get("experience", ""),
+                data.get("industry", ""),
+                data.get("location", ""),
+                data.get("position", "")
+            ])
+
+        logging.info("Данные успешно обновлены в таблице!")
     except Exception as e:
-        logging.error(f"Ошибка при добавлении данных в таблицу: {e}")
+        logging.error(f"Ошибка при обновлении данных в таблице: {e}")
+
+
+
 
 def create_connection(db_name='bot_database.db'):
     """Создает подключение к базе данных"""
@@ -256,3 +281,46 @@ def create_all_tables(db_name='bot_database.db'):
     conn.commit()
     conn.close()
     print("Все таблицы успешно созданы!")
+
+def update_response_in_db(telegram_user_id, question, answer, is_other_option=False):
+    """
+    Обновляет ответ пользователя в базе данных.
+    Если записи нет, добавляет новый ответ.
+    """
+    conn = create_connection()
+    cursor = conn.cursor()
+    try:
+        # Получаем UserID из таблицы Users
+        cursor.execute("SELECT UserID FROM Users WHERE TelegramUserID = ?", (telegram_user_id,))
+        user = cursor.fetchone()
+        if not user:
+            raise ValueError(f"No user found with TelegramUserID={telegram_user_id}")
+        user_id = user[0]
+
+        # Проверяем, существует ли ответ на данный вопрос
+        cursor.execute("""
+            SELECT ResponseID FROM Responses WHERE UserID = ? AND Question = ?
+        """, (user_id, question))
+        response = cursor.fetchone()
+
+        if response:
+            # Если ответ существует, обновляем его
+            cursor.execute("""
+                UPDATE Responses
+                SET Answer = ?, IsOtherOption = ?
+                WHERE ResponseID = ?
+            """, (answer, is_other_option, response[0]))
+        else:
+            # Если ответа нет, добавляем новый
+            cursor.execute("""
+                INSERT INTO Responses (UserID, Question, Answer, IsOtherOption)
+                VALUES (?, ?, ?, ?)
+            """, (user_id, question, answer, is_other_option))
+
+        conn.commit()
+        logging.info(f"Ответ для UserID={user_id}, Question='{question}' обновлен/добавлен.")
+    except Exception as e:
+        logging.error(f"Ошибка при обновлении/добавлении ответа для TelegramUserID={telegram_user_id}: {e}")
+    finally:
+        conn.close()
+
