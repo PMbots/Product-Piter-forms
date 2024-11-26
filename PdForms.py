@@ -10,6 +10,7 @@ import logging
 from database import (
     create_all_tables, create_connection, save_response_to_db,
     save_user_to_db, save_log, add_reminder, update_reminder,
+<<<<<<< HEAD
     deactivate_reminder, delete_user_from_db,
     connect_to_google_sheet, add_data_to_sheet
 )
@@ -18,6 +19,16 @@ API_TOKEN = '7604176272:AAG-mT7W6mrn_NNjOrcNjmOy8Fc3KHxuoXk'
 
 # Инициализация бота и диспетчера
 bot = Bot(token=API_TOKEN)
+=======
+    deactivate_reminder, delete_user_from_db
+)
+
+TEST_TOKEN = "6511297435:AAF0LWNmaaB3oBpYfWyUKB7n322soW45AmU"
+API_TOKEN = '7645108253:AAHIjxssce32bn3DQKbI4tvuiYHvOWoOnco'
+
+# Инициализация бота и диспетчера
+bot = Bot(token=TEST_TOKEN)
+>>>>>>> 2df79fc03709b7472b04f1e4d68b409475a4e822
 storage = MemoryStorage()
 dp = Dispatcher(bot, storage=storage)
 
@@ -40,7 +51,10 @@ class SurveyStates(StatesGroup):
 
 # Временная функция для напоминания
 async def reminder_task(telegram_user_id, chat_id):
+<<<<<<< HEAD
     asyncio.current_task().set_name(f"reminder_task_{telegram_user_id}")
+=======
+>>>>>>> 2df79fc03709b7472b04f1e4d68b409475a4e822
     await asyncio.sleep(30 * 60)  # Ожидание 30 минут
     conn = create_connection('bot_database.db')
     cursor = conn.cursor()
@@ -48,6 +62,7 @@ async def reminder_task(telegram_user_id, chat_id):
     user = cursor.fetchone()
     if user:
         user_id = user[0]
+<<<<<<< HEAD
         cursor.execute("SELECT IsActive FROM Reminders WHERE UserID = ?", (user_id,))
         reminder = cursor.fetchone()
         if reminder and reminder[0]:  # Проверяем, активен ли опрос
@@ -59,10 +74,21 @@ async def reminder_task(telegram_user_id, chat_id):
             )
             update_reminder(user_id, "FirstReminderSent", datetime.now().isoformat())
             asyncio.create_task(delete_user_task(telegram_user_id, chat_id))
+=======
+        await bot.send_message(chat_id, "Напоминаем о начале опроса! Не забудь нажать кнопку 'Начать'.")
+        save_log(
+            user_id=telegram_user_id,
+            event="Напоминание отправлено",
+            timestamp=datetime.now().isoformat()
+        )
+        update_reminder(user_id, "FirstReminderSent", datetime.now().isoformat())
+        asyncio.create_task(delete_user_task(telegram_user_id, chat_id))
+>>>>>>> 2df79fc03709b7472b04f1e4d68b409475a4e822
     conn.close()
 
 # Временная функция для удаления пользователя
 async def delete_user_task(telegram_user_id, chat_id):
+<<<<<<< HEAD
     asyncio.current_task().set_name(f"delete_user_task_{telegram_user_id}")
     await asyncio.sleep(40 * 60)  # Ожидание 40 минут
     delete_user_from_db(telegram_user_id)
@@ -71,17 +97,25 @@ async def delete_user_task(telegram_user_id, chat_id):
     await bot.send_message(chat_id, "Мы удалили твои данные из системы из-за неактивности. Чтобы пройти анкету снова, напиши /start.")
 
     # Сохранение лога
+=======
+    await asyncio.sleep(40 * 60)  # Ожидание 40 минут
+    delete_user_from_db(telegram_user_id)
+    await bot.send_message(chat_id, "Мы удалили твои данные из системы из-за неактивности.")
+>>>>>>> 2df79fc03709b7472b04f1e4d68b409475a4e822
     save_log(
         user_id=telegram_user_id,
         event="Пользователь удален из базы данных за неактивность",
         timestamp=datetime.now().isoformat()
     )
+<<<<<<< HEAD
 
     # Сброс состояния FSM для пользователя
     state = dp.current_state(chat=chat_id, user=telegram_user_id)
     await state.finish()  # Полный сброс состояния пользователя
 
     # Деактивация напоминания, если оно было активно
+=======
+>>>>>>> 2df79fc03709b7472b04f1e4d68b409475a4e822
     conn = create_connection('bot_database.db')
     cursor = conn.cursor()
     cursor.execute("SELECT UserID FROM Users WHERE TelegramUserID = ?", (telegram_user_id,))
@@ -91,6 +125,7 @@ async def delete_user_task(telegram_user_id, chat_id):
         deactivate_reminder(user_id)
     conn.close()
 
+<<<<<<< HEAD
 # Функция для отмены задач напоминания и удаления пользователя
 def cancel_reminder_tasks(telegram_user_id):
     """Отменяет задачи напоминаний и деактивирует их в базе данных."""
@@ -118,10 +153,29 @@ def cancel_reminder_tasks(telegram_user_id):
 
 @dp.message_handler(commands=['start'])
 async def send_welcome(message: types.Message):
+=======
+# Приветственное сообщение и начало опроса
+@dp.message_handler(commands=['start'])
+async def send_welcome(message: types.Message):
+    markup = ReplyKeyboardMarkup(resize_keyboard=True)
+    markup.add(KeyboardButton("Начать"))
+    save_user_to_db(
+        telegram_user_id=message.from_user.id,
+        username=message.from_user.username,
+        first_name=message.from_user.first_name,
+        last_name=message.from_user.last_name
+    )
+    save_log(
+        user_id=message.from_user.id,
+        event="Команда /start выполнена",
+        timestamp=datetime.now().isoformat()
+    )
+>>>>>>> 2df79fc03709b7472b04f1e4d68b409475a4e822
     conn = create_connection('bot_database.db')
     cursor = conn.cursor()
     cursor.execute("SELECT UserID FROM Users WHERE TelegramUserID = ?", (message.from_user.id,))
     user = cursor.fetchone()
+<<<<<<< HEAD
     conn.close()
 
     if user:
@@ -174,6 +228,20 @@ async def start_survey(message: types.Message, state: FSMContext):
     conn.close()
 
     await state.finish()  # Сбрасываем состояние и очищаем данные
+=======
+    if user:
+        user_id = user[0]
+        add_reminder(user_id)
+    conn.close()
+    await message.answer(
+        "Привет! Это бот твоего комьюнити Продакты СПБ. Нажми 'Начать', чтобы пройти опрос.",
+        reply_markup=markup
+    )
+    asyncio.create_task(reminder_task(message.from_user.id, message.chat.id))
+
+@dp.message_handler(lambda message: message.text == "Начать")
+async def start_survey(message: types.Message):
+>>>>>>> 2df79fc03709b7472b04f1e4d68b409475a4e822
     save_log(
         user_id=message.from_user.id,
         event="Опрос начат",
@@ -182,6 +250,13 @@ async def start_survey(message: types.Message, state: FSMContext):
     conn = create_connection('bot_database.db')
     cursor = conn.cursor()
     cursor.execute("SELECT UserID FROM Users WHERE TelegramUserID = ?", (message.from_user.id,))
+<<<<<<< HEAD
+=======
+    user = cursor.fetchone()
+    if user:
+        user_id = user[0]
+        deactivate_reminder(user_id)
+>>>>>>> 2df79fc03709b7472b04f1e4d68b409475a4e822
     conn.close()
     await message.answer("Как тебя зовут? Напиши в формате: Имя и Фамилия.", reply_markup=ReplyKeyboardRemove())
     await SurveyStates.NAME.set()
@@ -199,7 +274,11 @@ async def get_name(message: types.Message, state: FSMContext):
         event="Ответ на вопрос: Как тебя зовут?",
         timestamp=datetime.now().isoformat()
     )
+<<<<<<< HEAD
     await message.answer("Где ты работаешь? Укажи название компании.", reply_markup=ReplyKeyboardRemove())
+=======
+    await message.answer("Где ты работаешь? Укажи название компании.")
+>>>>>>> 2df79fc03709b7472b04f1e4d68b409475a4e822
     await SurveyStates.COMPANY.set()
 
 @dp.message_handler(state=SurveyStates.COMPANY)
@@ -237,7 +316,10 @@ async def get_experience(message: types.Message, state: FSMContext):
         await message.answer("Пожалуйста, укажи свой опыт текстом.", reply_markup=ReplyKeyboardRemove())
         await SurveyStates.OTHER_EXPERIENCE.set()
     else:
+<<<<<<< HEAD
         await state.update_data(experience=message.text)
+=======
+>>>>>>> 2df79fc03709b7472b04f1e4d68b409475a4e822
         save_response_to_db(
             telegram_user_id=message.from_user.id,
             question="Какой у тебя опыт в продакт-менеджменте?",
@@ -288,7 +370,10 @@ async def get_industry(message: types.Message, state: FSMContext):
         await message.answer("Пожалуйста, укажи сферу работы текстом.", reply_markup=ReplyKeyboardRemove())
         await SurveyStates.OTHER_INDUSTRY.set()
     else:
+<<<<<<< HEAD
         await state.update_data(industry=message.text)
+=======
+>>>>>>> 2df79fc03709b7472b04f1e4d68b409475a4e822
         save_response_to_db(
             telegram_user_id=message.from_user.id,
             question="В какой сфере ты работаешь?",
@@ -317,7 +402,11 @@ async def get_other_industry(message: types.Message, state: FSMContext):
     await ask_location(message, state)
 
 async def ask_location(message: types.Message, state: FSMContext):
+<<<<<<< HEAD
     await message.answer("В каком городе ты живешь?", reply_markup=ReplyKeyboardRemove())
+=======
+    await message.answer("В какой стране и городе ты живешь?", reply_markup=ReplyKeyboardRemove())
+>>>>>>> 2df79fc03709b7472b04f1e4d68b409475a4e822
     await SurveyStates.LOCATION.set()
 
 @dp.message_handler(state=SurveyStates.LOCATION)
@@ -325,7 +414,11 @@ async def get_location(message: types.Message, state: FSMContext):
     await state.update_data(location=message.text)
     save_response_to_db(
         telegram_user_id=message.from_user.id,
+<<<<<<< HEAD
         question="В каком городе ты живешь?",
+=======
+        question="В какой стране и городе ты живешь?",
+>>>>>>> 2df79fc03709b7472b04f1e4d68b409475a4e822
         answer=message.text
     )
     save_log(
@@ -334,15 +427,21 @@ async def get_location(message: types.Message, state: FSMContext):
         timestamp=datetime.now().isoformat()
     )
     await message.answer(
+<<<<<<< HEAD
         "В чём твои сильные стороны? Как ты можешь помочь другим участникам или бизнесу, и в каких проектах с тобой можно сотрудничать?\n"
         "(Например, можешь проконсультировать по запуску продуктов, помочь с оптимизацией процессов, A/B тестированием, улучшением воронки конверсии, "
         "Разработкой стратегий или организацией работы команды)",
+=======
+        "На какой позиции ты работаешь? Как ты можешь описать свою основную деятельность? "
+        "Чем занимаешься, что создаешь, за какие процессы отвечаешь?",
+>>>>>>> 2df79fc03709b7472b04f1e4d68b409475a4e822
         reply_markup=ReplyKeyboardRemove()
     )
     await SurveyStates.POSITION.set()
 
 @dp.message_handler(state=SurveyStates.POSITION)
 async def get_position(message: types.Message, state: FSMContext):
+<<<<<<< HEAD
     """Обработка последнего вопроса и завершение опроса."""
     # Сохранение ответа
     await state.update_data(position=message.text)
@@ -392,3 +491,22 @@ async def get_position(message: types.Message, state: FSMContext):
 if __name__ == '__main__':
     connect_to_google_sheet()
     executor.start_polling(dp, skip_updates=True)
+=======
+    await state.update_data(position=message.text)
+    save_response_to_db(
+        telegram_user_id=message.from_user.id,
+        question="На какой позиции ты работаешь?",
+        answer=message.text
+    )
+    save_log(
+        user_id=message.from_user.id,
+        event=f"Опрос завершен. Ответ на позицию: {message.text}",
+        timestamp=datetime.now().isoformat()
+    )
+    await message.answer("Спасибо за участие в опросе! Мы свяжемся с тобой в ближайшее время для обсуждения.")
+    logging.info(f"Ответы пользователя: {await state.get_data()}")
+    await state.finish()
+
+if __name__ == '__main__':
+    executor.start_polling(dp, skip_updates=True)
+>>>>>>> 2df79fc03709b7472b04f1e4d68b409475a4e822

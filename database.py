@@ -1,5 +1,6 @@
 import sqlite3
 import logging
+<<<<<<< HEAD
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 from google.oauth2.service_account import Credentials
@@ -76,10 +77,16 @@ def add_data_to_sheet(sheet_name, data):
 
 
 
+=======
+>>>>>>> 2df79fc03709b7472b04f1e4d68b409475a4e822
 def create_connection(db_name='bot_database.db'):
     """Создает подключение к базе данных"""
     return sqlite3.connect(db_name)
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 2df79fc03709b7472b04f1e4d68b409475a4e822
 def create_table_users(cursor):
     """таблица Users"""
     cursor.execute("""
@@ -145,6 +152,10 @@ def create_table_logs(cursor):
     );
     """)
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 2df79fc03709b7472b04f1e4d68b409475a4e822
 def save_user_to_db(telegram_user_id, username, first_name, last_name, country=None, city=None, position=None):
     """
     Сохраняет данные пользователя в базу.
@@ -164,6 +175,10 @@ def save_user_to_db(telegram_user_id, username, first_name, last_name, country=N
     finally:
         conn.close()
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 2df79fc03709b7472b04f1e4d68b409475a4e822
 def save_response_to_db(telegram_user_id, question, answer, is_other_option=False):
     """Сохраняет ответ пользователя в базу"""
     conn = create_connection()
@@ -187,6 +202,11 @@ def save_response_to_db(telegram_user_id, question, answer, is_other_option=Fals
     finally:
         conn.close()
 
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> 2df79fc03709b7472b04f1e4d68b409475a4e822
 def save_log(user_id, event, timestamp):
     """Сохраняет событие в таблицу Logs"""
     conn = create_connection('bot_database.db')
@@ -213,6 +233,10 @@ def delete_user_from_db(telegram_user_id):
     finally:
         conn.close()
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 2df79fc03709b7472b04f1e4d68b409475a4e822
 def add_reminder(user_id, first_reminder_sent=None, second_reminder_sent=None, is_active=True):
     """
     Добавляет напоминание для пользователя.
@@ -281,6 +305,7 @@ def create_all_tables(db_name='bot_database.db'):
     conn.commit()
     conn.close()
     print("Все таблицы успешно созданы!")
+<<<<<<< HEAD
 
 def update_response_in_db(telegram_user_id, question, answer, is_other_option=False):
     """
@@ -324,3 +349,5 @@ def update_response_in_db(telegram_user_id, question, answer, is_other_option=Fa
     finally:
         conn.close()
 
+=======
+>>>>>>> 2df79fc03709b7472b04f1e4d68b409475a4e822

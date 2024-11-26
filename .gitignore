@@ -1,1 +1,7 @@
+<<<<<<< HEAD
 "pdforms-7773c804451d.json" 
+=======
+bot_database.db
+__pycache__/
+venv/
+>>>>>>> 2df79fc03709b7472b04f1e4d68b409475a4e822
