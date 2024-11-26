@@ -391,4 +391,4 @@ async def get_position(message: types.Message, state: FSMContext):
 
 if __name__ == '__main__':
     connect_to_google_sheet()
-    executor.start_polling(dp, skip_updates=True)x`
+    executor.start_polling(dp, skip_updates=True)
